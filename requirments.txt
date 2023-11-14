@@ -1,0 +1,6 @@
+bcrypt==3.2.0
+mysql-connector-python==8.0.28
+tqdm==4.64.0
+tk==0.1.0
+customtkinter==5.2.1
+tkcalendar==1.6.1
