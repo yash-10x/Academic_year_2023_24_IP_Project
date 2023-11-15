@@ -1,104 +1,51 @@
 import tkinter as tk
 import mysql.connector
 import bcrypt
+import customtkinter as ctk
+from PIL import Image, ImageTk
 
-
-
-#########################################################################################################################################
-# registration page
-def registration_page():
-    window = tk.Tk()
-    window.title("User Registration")
-
-    # Create and place widgets in the window
-    label_username = tk.Label(window, text="Username:")
-    label_username.pack()
-
-    username_entry = tk.Entry(window)
-    username_entry.pack()
-
-    label_password = tk.Label(window, text="Password:")
-    label_password.pack()
-
-    password_entry = tk.Entry(window, show="*")
-    password_entry.pack()
-
-    label_whatsapp = tk.Label(window, text="WhatsApp:")
-    label_whatsapp.pack()
-
-    whatsapp_entry = tk.Entry(window)
-    whatsapp_entry.pack()
-
-    label_email = tk.Label(window, text="Email:")
-    label_email.pack()
-
-    email_entry = tk.Entry(window)
-    email_entry.pack()
-
-    def register_user():
-        username = username_entry.get()
-        password = password_entry.get()
-        whatsapp = whatsapp_entry.get()
-        email = email_entry.get()
-
-        mydb = mysql.connector.connect(
-            host="localhost",
-            user="yash",
-            password="root",
-            database="calendar_db"
-        )
-
-        mycursor = mydb.cursor()
-
-        # Hash the password before storing it in the database
-        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-
-        # Insert user data into the 'userdata' table
-        sql = "INSERT INTO userdata (username, password, whatsapp, email) VALUES (%s, %s, %s, %s)"
-        values = (username, hashed_password, whatsapp, email)
-
-        try:
-            mycursor.execute(sql, values)
-            mydb.commit()
-            result_label.config(text="Registration successful!")
-        except mysql.connector.Error as err:
-            print(f"Error: {err}")
-            result_label.config(text="Registration failed")
-
-        mydb.close()
-
-    def close_window():
-        window.after(500, window.destroy)
-
-    register_button = tk.Button(window, text="Register", command=lambda:[register_user(), close_window()])
-    register_button.pack()
-
-    login_button = tk.Button(window, text="Login", command=lambda: [close_window(), login_page()])
-    login_button.pack()
-
-    result_label = tk.Label(window, text="")
-    result_label.pack()
-
-    window.mainloop()
 #########################################################################################################################################
 #########################################################################################################################################
 # login page
 def login_page():
-    window = tk.Tk()
+    window = ctk.CTk()
     window.title("User Login")
+    window.geometry("1444x800")
+    ctk.set_appearance_mode("Dark")
+    ctk.set_default_color_theme("dark-blue")
 
-    label_username = tk.Label(window, text="Username:")
-    label_username.pack()
+    def change_theme():
+        current_theme = ctk.get_appearance_mode()
+        if current_theme == "Light":
+            ctk.set_appearance_mode("Dark")
+        else:
+            ctk.set_appearance_mode("Light") 
+        
+    switch = ctk.CTkSwitch(window, text="Light/Dark Mode",font=("Times New Roman",10),width=15, height=2,fg_color="black")
+    switch.configure(command=change_theme)
+    switch.place(x=1300,y=0)
 
-    username_entry = tk.Entry(window)
-    username_entry.pack()
+    img = tk.PhotoImage(file="login.png",master=window)
+    label = ctk.CTkLabel(window, text=" ", image=img)
+    label.grid(row=0,column=0,)
 
-    label_password = tk.Label(window, text="Password:")
-    label_password.pack()
+    label_headding = ctk.CTkLabel(window,text="Login",font=("Times New Roman",70))
+    label_headding.place(x=700,y=0,)
 
-    password_entry = tk.Entry(window, show="*")
-    password_entry.pack()
+    label_username = ctk.CTkLabel(window, text="Username:",font=("Times New Roman",40))
+    label_username.place(x=750,y=200)
 
+    username_entry = ctk.CTkEntry(window,width=400,font=("Times New Roman",30))
+    username_entry.place(x=930,y=205)
+
+    label_password = ctk.CTkLabel(window, text="Password:",font=("Times New Roman",40))
+    label_password.place(x=750,y=300)
+
+    password_entry = ctk.CTkEntry(window, show="*",font=("Times New Roman",30),width=400)
+    password_entry.place(x=930,y=305)
+
+    login_status_label = ctk.CTkLabel(window, text="")
+    login_status_label.place(x=740,y=80)
 
     def process_login():
         entered_username = username_entry.get()
@@ -120,13 +67,13 @@ def login_page():
         if hashed_password_bytes:
             # Check if the entered password matches the stored hashed password
             if bcrypt.checkpw(entered_password.encode('utf-8'), hashed_password_bytes[0].encode('utf-8')):
-                login_status_label.config(text="Login successful")
+                login_status_label.configure(text="Login successful!",text_color = "green",font=("Times New Roman",20))
                 # Close the window if login is successful
                 window.after(2000, window.destroy)
             else:
-                login_status_label.config(text="Login failed")
+                login_status_label.configure(window,text="Login failed",text_color="red",font=("Times New Roman",20))
         else:
-            login_status_label.config(text="User not found")
+            login_status_label.configure(window,text="User not found",text_color="red",font=("Times New Roman",20))
 
         cursor.close()
 
@@ -157,24 +104,117 @@ def login_page():
             connection.close()
 
 
-    # executing all/multiple functions
+
     def execute_multiple_functions():
         process_login()
         user_temp_data()
+    
+    login_button = ctk.CTkButton(window, text="Login", command=execute_multiple_functions,font=("Times New Roman",30),width=400)
+    login_button.place(x=850,y=400)
+
+    registration_button = ctk.CTkButton(window, text="Register", command=lambda: [window.destroy(), registration_page()],font=("Times New Roman",30),width=400)
+    registration_button.place(x=850,y=450)
 
 
-
-    login_button = tk.Button(window, text="Login", command=execute_multiple_functions)
-    login_button.pack()
-
-    registration_button = tk.Button(window, text="Register", command=lambda: [window.destroy(), registration_page(), login_page()])
-    registration_button.pack()
-
-    login_status_label = tk.Label(window, text="")
-    login_status_label.pack()
 
     window.mainloop()
 
+
+
+
+#########################################################################################################################################
+# registration page
+def registration_page():
+
+    ctk.set_appearance_mode("Light")
+    ctk.set_default_color_theme("dark-blue")
+    window = ctk.CTk()
+    window.geometry("1444x800")
+    window.title("User Registration")
+    my_image = ctk.CTkImage(light_image=Image.open("register.png"),dark_image=Image.open("register.png"),size=(700, 800))
+    label = ctk.CTkLabel(window, text=" ", image=my_image,width=50,height=50)
+    label.grid(row=0,column=0,sticky="nsew")
+
+    label_headding = ctk.CTkLabel(window,text="Registar",font=("Times New Roman",50))
+    label_headding.place(x=680,y=0,)
+    
+    def change_theme():
+        current_theme = ctk.get_appearance_mode()
+        if current_theme == "Light":
+            ctk.set_appearance_mode("Dark")
+        else:
+            ctk.set_appearance_mode("Light") 
+        
+    switch = ctk.CTkSwitch(window, text="Light/Dark Mode",font=("Times New Roman",10),width=15, height=2,fg_color="black")
+    switch.configure(command=change_theme)
+    switch.place(x=1300,y=0)
+    
+    label_username = ctk.CTkLabel(window, text="Username:",font=("Times New Roman",40))
+    label_username.place(x=750,y=200)
+
+    username_entry = ctk.CTkEntry(window,width=400,font=("Times New Roman",30))
+    username_entry.place(x=930,y=205)
+
+    label_password = ctk.CTkLabel(window, text="Password:",font=("Times New Roman",40))
+    label_password.place(x=750,y=270)
+
+    password_entry = ctk.CTkEntry(window, show="*",font=("Times New Roman",30),width=400)
+    password_entry.place(x=930,y=275)
+
+    label_whatsapp = ctk.CTkLabel(window, text="WhatsApp:",font=("Times New Roman",40))
+    label_whatsapp.place(x=740,y=340)
+
+    whatsapp_entry = ctk.CTkEntry(window,width=400,font=("Times New Roman",30))
+    whatsapp_entry.place(x=930,y=345)
+
+    label_email = ctk.CTkLabel(window, text="Email:",font=("Times New Roman",40))
+    label_email.place(x=780,y=410)
+
+    email_entry = ctk.CTkEntry(window,width=400,font=("Times New Roman",30))
+    email_entry.place(x=930,y=415)
+
+    def register_user():
+        username = username_entry.get()
+        password = password_entry.get()
+        whatsapp = whatsapp_entry.get()
+        email = email_entry.get()
+
+        mydb = mysql.connector.connect(
+            host="localhost",
+            user="yash",
+            password="root",
+            database="calendar_db"
+        )
+
+        mycursor = mydb.cursor()
+
+        # Hash the password before storing it in the database
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
+        # Insert user data into the 'userdata' table
+        sql = "INSERT INTO userdata (username, password, whatsapp, email) VALUES (%s, %s, %s, %s)"
+        values = (username, hashed_password, whatsapp, email)
+
+        try:
+            mycursor.execute(sql, values)
+            mydb.commit()
+            result_label.configure(text="Registration successful!",text_color = "green")
+        except mysql.connector.Error as err:
+            print(f"Error: {err}")
+            result_label.configure(text="Registration failed",text_color="red",font=("Times New Roman",20))
+
+        mydb.close()
+
+    def close_window():
+        window.after(500, window.destroy)
+
+    register_button = ctk.CTkButton(window, text="Register", command=lambda:[register_user(),login_page(),close_window()],font=("Times New Roman",30),width=400)
+    register_button.place(x=850,y=555)
+    
+    result_label = ctk.CTkLabel(window, text="",font=("Times New Roman",20))
+    result_label.place(x=700,y=55)
+
+    window.mainloop()
 
 
 if __name__ == "__main__":
