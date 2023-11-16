@@ -1,8 +1,12 @@
+#########################################################################################################################################
+#########################################################################################################################################
+# Importing modules
 import tkinter as tk
 import mysql.connector
 import bcrypt
 import customtkinter as ctk
 from PIL import Image, ImageTk
+from app import app
 
 #########################################################################################################################################
 #########################################################################################################################################
@@ -69,7 +73,10 @@ def login_page():
             if bcrypt.checkpw(entered_password.encode('utf-8'), hashed_password_bytes[0].encode('utf-8')):
                 login_status_label.configure(text="Login successful!",text_color = "green",font=("Times New Roman",20))
                 # Close the window if login is successful
-                window.after(2000, window.destroy)
+                window.after(20, window.destroy)
+                # Open the calendar app
+                app()
+
             else:
                 login_status_label.configure(window,text="Login failed",text_color="red",font=("Times New Roman",20))
         else:
@@ -88,7 +95,7 @@ def login_page():
                 database="calendar_db"
             )
             cursor = connection.cursor()
-            cursor.execute("CREATE TABLE IF NOT EXISTS user_temp (username VARCHAR(255), whatsapp VARCHAR(255), email VARCHAR(255))")
+            cursor.execute("CREATE TABLE IF NOT EXISTS user_temp (id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(255), whatsapp VARCHAR(255), email VARCHAR(255))")
             cursor.execute("SELECT whatsapp, email FROM userdata WHERE username=%s", (username,))
             user_data = cursor.fetchone()
             if user_data:
@@ -121,7 +128,7 @@ def login_page():
 
 
 
-
+#########################################################################################################################################
 #########################################################################################################################################
 # registration page
 def registration_page():
@@ -206,9 +213,9 @@ def registration_page():
         mydb.close()
 
     def close_window():
-        window.after(500, window.destroy)
+        window.after(50, window.destroy)
 
-    register_button = ctk.CTkButton(window, text="Register", command=lambda:[register_user(),login_page(),close_window()],font=("Times New Roman",30),width=400)
+    register_button = ctk.CTkButton(window, text="Register", command=lambda:[register_user(),close_window(),login_page()],font=("Times New Roman",30),width=400)
     register_button.place(x=850,y=555)
     
     result_label = ctk.CTkLabel(window, text="",font=("Times New Roman",20))
@@ -216,7 +223,10 @@ def registration_page():
 
     window.mainloop()
 
-
+#########################################################################################################################################
+#########################################################################################################################################
 if __name__ == "__main__":
     login_page()
 
+#########################################################################################################################################
+#########################################################################################################################################
