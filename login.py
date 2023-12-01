@@ -98,10 +98,6 @@ def login_page():
 
     login_button = ctk.CTkButton(window, text="Login", command=lambda: [process_login()],font=("Times New Roman",30),width=400)
     login_button.place(x=850,y=400)
-
-    forgot_password_button = ctk.CTkButton(window, text="Forgot Password?", font=("Times New Roman",30),width=400,fg_color="transparent",bg_color="transparent",text_color=("#4158D0","white"),hover_color=("grey","grey"),command=lambda:[forgot_password_window()])
-    forgot_password_button.place(x=850,y=500)
-
     registration_button = ctk.CTkButton(window, text="Register", command=lambda: [window.destroy(), registration_page()],font=("Times New Roman",30),width=400)
     registration_button.place(x=850,y=450)
 

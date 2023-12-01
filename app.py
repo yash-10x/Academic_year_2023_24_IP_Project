@@ -4,7 +4,10 @@ import mysql.connector
 from tkinter import ttk
 import openai
 import datetime
-
+from utils import get_holidays, get_events, get_username, get_email
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 def app():
     window = ctk.CTk()
     window.title("Chronicle's of Events")
@@ -35,42 +38,14 @@ def app():
     textbox_holiday.insert("1.0", "\n\n".join(indian_holidays))
     textbox_holiday.place(x=5, y=50)
     # Add the holidays to the database and display them in the textbox
-    def display_holidays():
-        mydb = mysql.connector.connect(
-            host="localhost",
-            user="yash",
-            password="root",
-            database="chronicle_of_events"
-        )
-        mycursor = mydb.cursor()
-
-        mycursor.execute("SELECT holiday FROM holidays")
-        myresult = mycursor.fetchall()
-
-        if myresult:
-            holidays_text = "\n".join([holiday[0] for holiday in myresult])
-            textbox_holiday.insert("end", f"\n\n{holidays_text}\n\n")
-        else:
-            print("No holidays found.")
-
-        mycursor.close()
-        mydb.close()
-
     def holiday():
         cal_date_str = cal.get_date()
         cal_date_obj = datetime.datetime.strptime(cal_date_str, "%m/%d/%y")
-
         # Extract year, month, and day
         year, month, day = cal_date_obj.year, cal_date_obj.month, cal_date_obj.day
-
         # Format the date as "January 26"
         formatted_date = cal_date_obj.strftime("%B %d")
-
         holiday_text = text_box.get("1.0", "end-1c")
-        textbox_holiday.insert("1.0", f"\n{formatted_date} - {holiday_text}\n\n")
-        holiday = f"{formatted_date} - {holiday_text}"
-
-        # Add the holiday to the database
         mydb = mysql.connector.connect(
             host="localhost",
             user="yash",
@@ -78,29 +53,31 @@ def app():
             database="chronicle_of_events"
         )
         mycursor = mydb.cursor()
-
+        holiday = f"{formatted_date} - {holiday_text}"
+        # Add the holiday to the database
         # Get the username_id from the user_temp table
         mycursor.execute("SELECT id FROM user_temp")
         myresult = mycursor.fetchone()
-
         if myresult:
             username_id = myresult[0]
-
             # Insert the holiday into the holidays table
             mycursor.execute("INSERT INTO holidays (username_id, holiday) VALUES (%s, %s)", (username_id, holiday))
             mydb.commit()
             print("Holiday added to the database.")
-
             # Display updated holidays
-            display_holidays()
-
-        else:
-            print("Error: User ID not found.")
-        
+            textbox_holiday.delete("1.0", "end")
+            textbox_holiday.insert("1.0", "\n\n".join(indian_holidays))
+            mycursor.execute("SELECT holiday FROM holidays")
+            myresult = mycursor.fetchall()
+            if myresult:
+                holidays_text = "\n\n".join([holiday[0] for holiday in myresult])
+                textbox_holiday.insert("end", f"\n\n{holidays_text}")
+            else:
+                print("No holidays found.")
         mycursor.close()
         mydb.close()
 
-    display_holidays()
+
     #####################################################################################################################################
 
 
@@ -121,15 +98,11 @@ def app():
     def event():
         cal_date_str = cal.get_date()
         cal_date_obj = datetime.datetime.strptime(cal_date_str, "%m/%d/%y")
-
         # Extract year, month, and day
         year, month, day = cal_date_obj.year, cal_date_obj.month, cal_date_obj.day
-
         # Format the date as "January 26"
         formatted_date = cal_date_obj.strftime("%B %d")
-
         event_text = text_box.get("1.0", "end-1c")
-        textbox_events.insert("1.0", f"{formatted_date} - {event_text}\n\n")
         event = f"{formatted_date} - {event_text}"
 
         # Add the event to the database
@@ -154,36 +127,22 @@ def app():
             print("Event added to the database.")
 
             # Display updated events
-            display_evnts()
-
+            textbox_events.delete("1.0", "end")
+            textbox_events.insert("1.0", "\n\n".join(user_events))
+            mycursor.execute("SELECT events FROM events")
+            myresult = mycursor.fetchall()
+            if myresult:
+                events_text = "\n\n".join([event[0] for event in myresult])
+                textbox_events.insert("end", f"\n\n{events_text}")
+            else:
+                print("No events found.")
         else:
             print("Error: User ID not found.")
-        
         mycursor.close()
         mydb.close()
 
 
-    def display_evnts():
-        mydb = mysql.connector.connect(
-            host="localhost",
-            user="yash",
-            password="root",
-            database="chronicle_of_events"
-        )
-        mycursor = mydb.cursor()
 
-        mycursor.execute("SELECT events FROM events")
-        myresult = mycursor.fetchall()
-
-        if myresult:
-            events_text = "\n".join([events[0] for events in myresult])
-            textbox_events.insert("end-1c", f"\n\n{events_text}\n\n")
-        else:
-            print("No events found.")
-        mycursor.close()
-        mydb.close()
-
-    display_evnts()
     #####################################################################################################################################
 
 
@@ -208,7 +167,7 @@ def app():
 
     tabview.add("Notes")
     tabview.add("Assistant")
-    tabview.set("Notes")
+ 
     tabview.place(x=350, y=460)
 
     #Add a text box to write notes
@@ -220,6 +179,65 @@ def app():
     #Add a button to save in events
     event_button = ctk.CTkButton(tabview.tab("Notes"), text="EVENT", font=("Times New Roman", 20),command=event)
     event_button.place(x=650, y=220)
+    #####################################################################################################################################
+    #send message to Email button
+
+
+    holiday = get_holidays()
+    events = get_events()
+    username = get_username()
+    email = get_email()
+    Postmideaxam = ["IP - 15 December","Chemistry - 18 December","Maths - 19 December","English - 20 December","Physics - 22 December"]
+
+    # Format holiday as a string with serial numbers and remove (' ')
+    formatted_holidays = "\n".join([f"[{i+1}] {h[0]}" for i, h in enumerate(holiday)])
+
+    # Format events as a string with serial numbers and remove (' ')
+    formatted_events = "\n".join([f"[{i+1}] {e[0]}" for i, e in enumerate(events)])
+
+    # Format Postmideaxam as a string with serial numbers
+    formatted_postmideaxam = "\n".join([f"[{i+1}] {exam}" for i, exam in enumerate(Postmideaxam)])
+
+    # Create the message
+    message = f"""
+    Hello {username}!
+    [This is an automated message. Please do not reply to this email.]
+    Holidays are as follows:
+    {formatted_holidays}
+
+    Events are as follows:
+    {formatted_events}
+
+    Postmideaxam are as follows:
+    {formatted_postmideaxam}
+    """
+    # a function that takes message as an input and sends it to eamil 
+    def send_email(sender_email, sender_password, to_email, subject, body):
+        # Create the MIME object
+        msg = MIMEMultipart()
+        msg['From'] = sender_email
+        msg['To'] = to_email
+        msg['Subject'] = subject
+
+        # Attach the body of the email
+        msg.attach(MIMEText(body, 'plain'))
+
+        try:
+            # Connect to Gmail's SMTP server
+            with smtplib.SMTP('smtp.gmail.com', 587) as server:
+                server.starttls()
+                server.login(sender_email, sender_password)
+
+                # Send the email
+                server.sendmail(sender_email, to_email, msg.as_string())
+
+            print("Email sent successfully!")
+        except Exception as e:
+            print(f"Error: {e}")
+
+    
+    email_button = ctk.CTkButton(tabview.tab("Notes"), text="Send mail", font=("Times New Roman", 20),command= send_email("ip.project.2024.20750@gmail.com","vcya solo olcx hoba",email,"Chronicle of Events",message))
+    email_button.place(x=300, y=220)
     
     #####################################################################################################################################
 
@@ -284,8 +302,7 @@ def app():
     window.mainloop()
 
 
-
-
-
 if __name__ == "__main__":
     app()
+
+
