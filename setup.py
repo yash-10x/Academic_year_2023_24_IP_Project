@@ -18,7 +18,7 @@ def setup():
             )
 
             mycursor = mydb.cursor()
-            mycursor.execute("DROP DATABASE IF EXISTS calendar_db")
+            mycursor.execute("DROP DATABASE IF EXISTS chronicle_of_events")
 
             with tqdm(total=100, desc="Dropping database ") as pbar:
                 for i in range(100):
@@ -42,8 +42,8 @@ def setup():
             )
 
             mycursor = mydb.cursor()
-            mycursor.execute("CREATE DATABASE IF NOT EXISTS calendar_db")
-            mycursor.execute("USE calendar_db")
+            mycursor.execute("CREATE DATABASE IF NOT EXISTS chronicle_of_events")
+            mycursor.execute("USE chronicle_of_events")
 
             mycursor.execute("""
                 CREATE TABLE IF NOT EXISTS userdata (
@@ -59,7 +59,7 @@ def setup():
                 CREATE TABLE IF NOT EXISTS events (
                     id INT AUTO_INCREMENT PRIMARY KEY,
                     username_id INT,
-                    reminder_of_events VARCHAR(255),
+                    events VARCHAR(255),
                     FOREIGN KEY (username_id) REFERENCES userdata(id)
                 )
             """)
@@ -115,7 +115,7 @@ def install_dependencies():
 ########################################################################################################################################
 
 if __name__ == "__main__":
-    install_dependencies() # Install dependencies
+# Install dependencies
     setup() # Setup database
 
 
